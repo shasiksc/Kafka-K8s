@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minikube-proxy-config
+data:
+  settings: |
+    listenAddressPort: ":8888" # This must match your API `containerPort` in your deployment.yml
+    filters:
+    - ProxyHeaders
+    # - Auth
+    upstream:
+      host: localhost
+      port: 8082
+      ssl: false
+      timeout: 30
+      retryCount: 1
+      healthCheckLogLevel: debug
+    auth:
+      passOnNoAuth: false
+      clientTimeout: 30
+      cacheExpireSeconds: 3600
