@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minikube-kafka-rest-config
+data:
+  kafka.config: |
+    schema.registry.url=http://schema.registry.com:8081
+    zookeeper.connect=10.66.137.116:2181,10.66.137.117:2181,10.66.137.118:2181
+
+  # compression.type=snappy
+  #  retries=1
+  # configuration for java heap
+  kafka-rest.heap: "-Xmx3g"
+
+  kafka-rest-proxy.heap: "-Xmx3g"
+  kafka-rest.jmx-opts: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=9999"
+  # eventstream.partitions: "30"
