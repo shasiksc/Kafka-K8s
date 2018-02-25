@@ -1,0 +1,85 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: minikube-kafka-rest-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: minikube-kafka-rest-deployment
+    spec:
+      containers:
+      - name: kafka-rest                                       # api container
+        image: kafka.docker.target.com/kafka-rest-api:3.2.1
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
+          limits:
+            cpu: 900m
+            memory: 4Gi                        # api container
+        volumeMounts:
+        - name: minikube-kafka-rest-config
+          mountPath: "/tmp"
+        ports:                                               # api container
+        - containerPort: 8082                              # api container
+        env:
+          - name: KAFKAREST_HEAP_OPTS
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-kafka-rest-config
+                key: kafka-rest.heap
+          - name: KAFKAREST_JMX_OPTS
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-kafka-rest-config
+                key: kafka-rest.jmx-opts
+          - name: KAFKA_REST_ZOOKEEPER_CONNECT
+            value: "10.66.137.116:2181,10.66.137.117:2181,10.66.137.118:2181"
+          - name: KAFKA_REST_SCHEMA_REGISTRY_URL
+            value: "http://test.schema.registry.com:8081"
+          - name: KAFKA_REST_BOOTSTRAP_SERVERS
+            value: "10.66.137.116:9093,10.66.137.117:9093,10.66.137.118:9093"
+          - name: KAFKA_REST_CLIENT_SECURITY_PROTOCOL
+            value: "SSL"
+          - name: KAFKA_REST_CLIENT_SSL_KEYSTORE_LOCATION
+            value: "/usr/local/etc/kafka-rest-stg-keystore.jks"
+          - name: KAFKA_REST_CLIENT_SSL_TRUSTSTORE_LOCATION
+            value: "/usr/local/etc/kafka-rest-stg-truststore.jks"
+          - name: KAFKA_REST_CLIENT_SSL_KEY_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-rest-api-ssl-secrets
+                key: SSL_KEY_PASSWORD
+          - name: KAFKA_REST_CLIENT_SSL_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-rest-api-ssl-secrets
+                key: SSL_KEYSTORE_PASSWORD
+          - name: KAFKA_REST_CLIENT_SSL_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-rest-api-ssl-secrets
+                key: SSL_TRUSTSTORE_PASSWORD
+        volumeMounts:
+        - name: settings
+          mountPath: "/go/settings/"
+          readOnly: false
+      - name: alpine
+        image: janeczku/alpine-kubernetes:latest
+        imagePullPolicy: Always
+      volumes:
+        - name: settings
+          configMap:
+            name: minikube-proxy-config
+            items:
+            - key: settings
+              path: settings.yaml
+        - name: minikube-kafka-rest-config
+          configMap:
+             name: minikube-kafka-rest-config
+             items:
+             - key: kafka.config
+               path: kafka-rest.properties
